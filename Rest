@@ -28,16 +28,16 @@ ClassMethod createMember() As %Status
 	Quit 1
 }
 
-ClassMethod getMember() As %Status
+ClassMethod getMember(emailAddress) As %Status
 {
 		//set obj = {"Data": []}
 		//Embeded
 		//set person = ##class(%SQL.Statement).%ExecDirect(,"SELECT * FROM SQLUser.tblMember")
 		//Dynamic SQL
-		set sql = "SELECT * FROM SQLUser.tblMember WHERE emailAddress = 'moyahap00@gmail.com'"
+		set sql = "SELECT * FROM SQLUser.tblMember WHERE emailAddress = ?"
 		set statement = ##class(%SQL.Statement).%New()
 		set sc = statement.%Prepare(sql)
-		set client = statement.%Execute()
+		set client = statement.%Execute(emailAddress)
 		
 		while client.%Next(){
 			write "exists"
@@ -57,4 +57,5 @@ ClassMethod getMember() As %Status
 		}
 		write "does not exist"
 		return client
+}
 }
