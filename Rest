@@ -1,0 +1,60 @@
+Class User.GymREST Extends %CSP.REST
+{
+
+XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
+{
+<Routes>
+
+<Route Url="/member" Method="POST" Call="createMember"/>
+<Route Url="/member" Method="GET" Call="getMember"/>
+<Route Url="/member1" Method="POST" Call="createBooking"/>
+
+</Routes>
+}
+
+ClassMethod createMember() As %Status
+{
+	set obj = ##class(%DynamicObject).%FromJSON(%request.Content)
+	set client = ##class(User.tblMember).%New()
+	
+	set client.firstName = obj.firstName
+	set client.lastName = obj.lastName
+	set client.emailAddress = obj.emailAddress
+	set client.gender = obj.gender
+	set client.race = obj.race
+	
+	
+	Do client.%Save()
+	Quit 1
+}
+
+ClassMethod getMember() As %Status
+{
+		//set obj = {"Data": []}
+		//Embeded
+		//set person = ##class(%SQL.Statement).%ExecDirect(,"SELECT * FROM SQLUser.tblMember")
+		//Dynamic SQL
+		set sql = "SELECT * FROM SQLUser.tblMember WHERE emailAddress = 'moyahap00@gmail.com'"
+		set statement = ##class(%SQL.Statement).%New()
+		set sc = statement.%Prepare(sql)
+		set client = statement.%Execute()
+		
+		while client.%Next(){
+			write "exists"
+			set obj = {
+				"firstName" : (client.firstName),
+				"lastName" : (client.lastName),
+				"emailAddress" : (client.emailAddress),
+				"gender" : (client.gender),
+				"race" : (client.race)
+				}
+				//Do Datas.%Push(Datas)
+			
+			//}
+			Write obj.%ToJSON()
+			//Quit 1
+		return client																																												
+		}
+		write "does not exist"
+		return client
+}
