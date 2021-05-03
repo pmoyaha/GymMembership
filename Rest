@@ -1,61 +1,111 @@
+/// created to interact with the application
 Class User.GymREST Extends %CSP.REST
 {
+
+// Route element specifies a class method to be called for the specified URL and HTTP operation GET etc
+
+// Map to the HTTP Method where URL specifies the last part of the REST URL
+
+// Method specifies the HTTP request method for the REST call and methods should be in capital letters GET,POST,DELETE,UPDATE(action)
+
+// Call specifies the class method to call to perform REST service
 
 XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 {
 <Routes>
 
 <Route Url="/member" Method="POST" Call="createMember"/>
-<Route Url="/member" Method="GET" Call="getMember"/>
-<Route Url="/member1" Method="POST" Call="createBooking"/>
+<Route Url="/member1/:emailAddress" Method="GET" Call="getMember"/>
+<Route Url="/member2" Method="POST" Call="createBooking"/>
 
 </Routes>
 }
 
+// Post method to create Member and insert into database
+
 ClassMethod createMember() As %Status
 {
+	set status = $$$OK
+	//
+	
 	set obj = ##class(%DynamicObject).%FromJSON(%request.Content)
-	set client = ##class(User.tblMember).%New()
+	//New member class to be able to save 
+	set member = ##class(User.tblMember).%New()
+	//using dot syntax if the member is new set it up into the obj, hold properties from obj and set them up into the new class
+	//If member is firstName set that to firstName
+	set member.firstName = obj.firstName
+	set member.lastName = obj.lastName
+	set member.emailAddress = obj.emailAddress
+	set member.gender = obj.gender
+	set member.race = obj.race
 	
-	set client.firstName = obj.firstName
-	set client.lastName = obj.lastName
-	set client.emailAddress = obj.emailAddress
-	set client.gender = obj.gender
-	set client.race = obj.race
-	
-	
-	Do client.%Save()
-	Quit 1
+	//To save into the new class
+	Do member.%Save()
+	return status
 }
+
+// GET method to get a Members information using an emailAddress
 
 ClassMethod getMember(emailAddress) As %Status
 {
-		//set obj = {"Data": []}
-		//Embeded
-		//set person = ##class(%SQL.Statement).%ExecDirect(,"SELECT * FROM SQLUser.tblMember")
 		//Dynamic SQL
+		//SQL query to the database table using emailAddress
 		set sql = "SELECT * FROM SQLUser.tblMember WHERE emailAddress = ?"
+		//SQL new class to save into 
 		set statement = ##class(%SQL.Statement).%New()
+		//its to invoke the class query Prepare the statement 
 		set sc = statement.%Prepare(sql)
-		set client = statement.%Execute(emailAddress)
+		//if the prepare statement its true excute the statement
+		set member = statement.%Execute(emailAddress)
 		
-		while client.%Next(){
-			write "exists"
+		//Used to return the information
+		while member.%Next(){
+			//Add the elements into the loop 
+			//Created a dynamic object
 			set obj = {
-				"firstName" : (client.firstName),
-				"lastName" : (client.lastName),
-				"emailAddress" : (client.emailAddress),
-				"gender" : (client.gender),
-				"race" : (client.race)
+				"firstName" : (member.firstName),
+				"lastName" : (member.lastName),
+				"emailAddress" : (member.emailAddress),
+				"gender" : (member.gender),
+				"race" : (member.race)
 				}
 				//Do Datas.%Push(Datas)
 			
 			//}
+			//serialize to JSON
 			Write obj.%ToJSON()
 			//Quit 1
-		return client																																												
+		return member																																												
 		}
-		write "does not exist"
-		return client
 }
+
+ClassMethod createBooking() As %Status
+{
+		set obj = ##class(%DynamicObject).%FromJSON(%request.Content)
+		
+		set sql = "SELECT * FROM SQLUser.tblMember WHERE emailAddress = ?"
+		set statement = ##class(%SQL.Statement).%New()
+		set sc = statement.%Prepare(sql)
+		set member = statement.%Execute(obj.emailAddress)
+		
+		
+		IF (obj.emailAddress > 1){
+			return 1
+			}
+		
+		while member.%Next(){
+	
+			set obj = {
+				"firstName" : (member.firstName),
+				"lastName" : (member.lastName),
+				"emailAddress" : (member.emailAddress),
+				"gender" : (member.gender),
+				"race" : (member.race)
+				}
+				Write obj.%ToJSON()
+			//Quit 1
+		return member
+		}
+}
+
 }
