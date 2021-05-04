@@ -108,4 +108,40 @@ ClassMethod createBooking() As %Status
 		}
 }
 
+ClassMethod createBooking() As %Status
+{
+		set obj = ##class(%DynamicObject).%FromJSON(%request.Content)
+		
+		
+		set sql = "SELECT * FROM SQLUser.tblMember WHERE emailAddress = ?"
+		set statement = ##class(%SQL.Statement).%New()
+		set sc = statement.%Prepare(sql)
+		set member = statement.%Execute(obj.emailAddress)
+		//set clientId = member.ID
+		
+		write obj.dateOfBooking
+	
+		while member.%Next(){
+			
+				set sql = "INSERT INTO SQLUser.tblBooking (dateOfBooking,clientId) VALUES(?,?)"
+				set statement = ##class(%SQL.Statement).%New()
+				set sc = statement.%Prepare(sql)
+				set member = statement.%Execute(obj.dateOfBooking,member.ID)
+			
+				
+	
+			set obj = {
+				
+				
+				//"ID" : (member.ID),
+				//"emailAddess" : (member.emailAddress),
+				//"dateOfBooking" : (member.dateOfBooking)
+				}
+				Write obj.%ToJSON()
+				
+		return member
+		}
+		return member
 }
+}
+
